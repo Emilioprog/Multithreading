@@ -8,3 +8,11 @@ class TaskTest(unittest.TestCase):
         t = Task()
         t.work()  # Ajouté pour que ça marche
         npt.assert_allclose(t.a @ t.x, t.b)
+
+    def testtaskjson(self):
+        a=Task()
+        txt=a.to_json()
+        b=Task.from_jason(txt)
+        npt.array_equals(a,b)
+
+

@@ -1,103 +1,83 @@
-#include "Queue"
-#include "Task"
-#include <atomic>
+#include "nlohmann/json.hpp"
+#include <Eigen/Dense>
 #include <chrono>
-#include <condition_variable>
+#include <cpr/cpr.h>
 #include <iostream>
-#include <memory>
-#include <mutex>
 #include <thread>
+#include <unistd.h>
 
-// Classe représentant un Minion
+#define CODE_SUCCESS 200
+#define NB_CORES 4
+
 class Minion {
 private:
-  std::queue<std::shared_ptr<Task>> &taskQueue; // Référence à la file de tâches
-  std::queue<std::shared_ptr<Task>>
-      &resultQueue;       // Référence à la file de résultats
-  std::mutex &queueMutex; // Mutex pour synchroniser l'accès aux queues
-  std::condition_variable
-      &queueCV; // Condition variable pour signaler de nouvelles tâches
-  std::atomic<bool> &running; // Indicateur de continuation
+  int identifier;
+  int size;
+  Eigen::MatrixXd A; // pour les calculs après
+  Eigen::VectorXd X;
+  Eigen::VectorXd b;
+  double execution_time;
 
 public:
-  Minion(std::queue<std::shared_ptr<Task>> &taskQueue,
-         std::queue<std::shared_ptr<Task>> &resultQueue, std::mutex &queueMutex,
-         std::condition_variable &queueCV, std::atomic<bool> &running)
-      : taskQueue(taskQueue), resultQueue(resultQueue), queueMutex(queueMutex),
-        queueCV(queueCV), running(running) {}
-
-  void run() {
-    while (running) {
-      std::shared_ptr<Task> task;
-
-      {
-        // Protéger l'accès à la file avec un verrou
-        std::unique_lock<std::mutex> lock(queueMutex);
-        queueCV.wait(lock, [&] { return !taskQueue.empty() || !running; });
-
-        if (!running && taskQueue.empty())
-          break;
-
-        task = taskQueue.front();
-        taskQueue.pop();
+  Minion() {
+    while (true) {
+      while (!initialization()) {
       }
+      work();
+    }
+  }
 
-      if (task) {
-        std::cout << "Minion: Received task " << task->identifier
-                  << ". Processing...\n";
+  // Fonction pour initialiser le Minion en récupérant des données depuis un
+  // serveur
+  bool initialization() {
+    // Faire une requête GET vers le serveur
+    cpr::Response response = cpr::Get(cpr::Url{"http://localhost:8000"});
 
-        // Simuler le traitement de la tâche
-        task->work();
-
-        // Ajouter le résultat à la file des résultats
-        {
-          std::lock_guard<std::mutex> lock(queueMutex);
-          resultQueue.push(task);
-        }
-
-        std::cout << "Minion: Task " << task->identifier
-                  << " completed. Result sent.\n";
-      }
+    // Vérifier si la requête a réussi (code de statut HTTP 200)
+    if (response.status_code != CODE_SUCCESS) {
+      // Si la requête échoue, retourner false pour indiquer un échec
+      // d'initialisation
+      return false;
     }
 
-    std::cout << "Minion: No more tasks. Exiting...\n";
+    // Analyser la réponse JSON
+    nlohmann::json data_json = nlohmann::json::parse(response.text);
+
+    // Extraire l'identifiant et la taille des données JSON
+    identifier = data_json["identifier"];
+    size = data_json["size"];
+
+    // Redimensionner les matrices A et le vecteur b en fonction de la taille
+    // extraite
+    A.resize(size, size);
+    b.resize(size);
+
+    // Remplir la matrice A et le vecteur b avec les valeurs des données JSON
+    for (unsigned long i = 0; i < size; i++) {
+      for (unsigned long j = 0; j < size; j++) {
+        A(i, j) = data_json["A"][i][j];
+      }
+      b(i) = data_json["b"][i];
+    }
+    // Afficher un message indiquant une initialisation réussie
+    std::cout << "Minion " << getpid() << " pour la tâche " << identifier
+              << " initialisé" << std::endl;
+
+    // Retourner true pour indiquer une initialisation réussie
+    return true;
   }
-};
+}
+
 
 int main() {
-  QueueManager manager;
 
-  // Ajouter des tâches à la file
-  {
-    std::lock_guard<std::mutex> lock(manager.queueMutex);
-    for (int i = 1; i <= 10; ++i) {
-      manager.taskQueue.push(std::make_shared<Task>(i));
-    }
-  }
-  manager.queueCV.notify_all();
+  // Définir le nombre de threads pour le traitement parallèle en utilisant la
+  // bibliothèque Eigen
+  Eigen::setNbThreads(NB_CORES); // permet de limiter l'utilisation de eigen
 
-  // Démarrer les Minions
-  std::vector<std::thread> minions;
-  for (int i = 0; i < 3; ++i) {
-    minions.emplace_back([&manager]() {
-      Minion minion(manager.taskQueue, manager.resultQueue, manager.queueMutex,
-                    manager.queueCV, manager.running);
-      minion.run();
-    });
-  }
+  // Créer une instance de la classe Minion
+  Minion minion;
 
-  // Attendre la fin des threads
-  for (auto &minion : minions) {
-    minion.join();
-  }
-
-  // Afficher les résultats
-  std::cout << "All tasks processed. Results:\n";
-  while (!manager.resultQueue.empty()) {
-    auto result = manager.resultQueue.front();
-    manager.resultQueue.pop();
-    std::cout << "Task " << result->identifier << " completed.\n";
-  }
-
-  return 0;
+  // Quitter le programme
+  exit(0);
 }

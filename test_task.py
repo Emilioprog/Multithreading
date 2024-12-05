@@ -13,4 +13,4 @@ class TaskTest(unittest.TestCase):
         a = Task()
         txt = a.to_json()
         b = Task.from_jason(txt)
-        self.assertEqual(a, b)
+        npt.assert_equal(a, b)

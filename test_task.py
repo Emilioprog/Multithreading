@@ -12,5 +12,5 @@ class TaskTest(unittest.TestCase):
     def testtaskjson(self):
         a = Task()
         txt = a.to_json()
-        b = Task.from_jason(txt)
+        b = Task.from_json(txt)
         npt.assert_equal(a, b)

@@ -14,5 +14,3 @@ class TaskTest(unittest.TestCase):
         txt=a.to_json()
         b=Task.from_jason(txt)
         npt.array_equals(a,b)
-
-

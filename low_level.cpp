@@ -112,7 +112,22 @@ public:
     std::cout << "Minion " << getpid() << " a terminé la tâche " << identifier
               << " en " << execution_time << " secondes" << std::endl;
 
+    // créer le json pour le POSt
+    nlohmann::json data_json = {
+        {"identifier", identifier},
+        {"size", size},
+        {"time", time},
+    };
+
+    for (int i = 0; i < size; i++) {
+      data_json["b"][i] = b[i];
+      for (int j = 0; j < size; j++) {
+        data_json["A"][i][j] = A(i, j);
+      }
+    }
     // envoyer données sur serveur (POST)
+    cpr::Post(cpr::Url{"http://localhost:8000"},
+              cpr::Body{data_json.dump()}); // 127.0.01:8000
 
     // Retourner le temps d'exécution
     return execution_time;

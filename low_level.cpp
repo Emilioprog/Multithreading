@@ -66,7 +66,29 @@ public:
     // Retourner true pour indiquer une initialisation réussie
     return true;
   }
-}
+
+  // Fonction pour effectuer le travail du Minion en résolvant un système linéaire AX=b
+  double work() {
+      // Résoudre le système linéaire ax=b et mesurer le temps de début et de fin
+      const auto start_time = std::chrono::high_resolution_clock::now();
+      X = A.lu().solve(b);
+      const auto end_time = std::chrono::high_resolution_clock::now();
+
+      // Calculer le temps d'exécution
+      execution_time = std::chrono::duration_cast<std::chrono::duration<double>>(
+              end_time - start_time)
+              .count();
+
+      // Afficher l'identifiant de la tâche et le temps d'exécution
+      std::cout << "Minion " << getpid() << " a terminé la tâche " << identifier
+                << " en " << execution_time << " secondes" << std::endl;
+
+      // Retourner le temps d'exécution
+      return execution_time;
+  }
+};
+
+
 
 
 int main() {

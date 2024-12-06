@@ -5,7 +5,7 @@ import numpy as np
 
 
 class Task:
-    def __init__(self, identifier, size=None):
+    def __init__(self, identifier=0, size=None):
         self.identifier = identifier
         # choosee the size of the problem
         # self.size = size or np.random.randint(300, 3_000)

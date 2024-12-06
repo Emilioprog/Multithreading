@@ -100,7 +100,12 @@ public:
   double work() {
     // Résoudre le système linéaire ax=b et mesurer le temps de début et de fin
     const auto start_time = std::chrono::high_resolution_clock::now();
-    X = A.lu().solve(b);
+
+    // X = A.lu().solve(b);
+    // Eigen::LLT<Eigen::MatrixXd> llt(A);
+    // Eigen::VectorXd x = llt.solve(b); //modifier ici pour les différents
+    // solveurs
+
     const auto end_time = std::chrono::high_resolution_clock::now();
 
     // Calculer le temps d'exécution

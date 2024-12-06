@@ -110,13 +110,13 @@ public:
 
     // Afficher l'identifiant de la tâche et le temps d'exécution
     std::cout << "Minion " << getpid() << " a terminé la tâche " << identifier
-              << " en " << execution_time << " secondes" << std::endl;
+              << " en " << execution_time << std::endl;
 
     // créer le json pour le POSt
     nlohmann::json data_json = {
         {"identifier", identifier},
         {"size", size},
-        {"time", time},
+        {"time", execution_time},
     };
 
     for (int i = 0; i < size; i++) {

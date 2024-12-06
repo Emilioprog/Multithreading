@@ -16,7 +16,9 @@ class Minion:
 
                 # Simuler le traitement de la tâche
                 task.work()
-                print(f"Minion: Task {task.identifier} completed. Sending result back.")
+                print(
+                    f"Minion: Task {task.identifier} completed in {task.time} seconds. Sending result back."
+                )
 
                 # Envoyer le résultat dans la result_queue
                 self.client.result_queue.put(task)

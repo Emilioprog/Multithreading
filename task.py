@@ -5,13 +5,13 @@ import numpy as np
 
 
 class Task:
-    def __init__(self, identifier=0, size=None):
+    def __init__(self, identifier, size=None):
         self.identifier = identifier
         # choosee the size of the problem
         # self.size = size or np.random.randint(300, 3_000)
-        self.size = 10
+        self.size = size or np.random(30,300)
         # Generate the input of the problem
-        self.a = np.random.rand(self.size, self.size)
+        self.A = np.random.rand(self.size, self.size)
         self.b = np.random.rand(self.size)
         # prepare room for the results
         self.x = np.zeros((self.size))
@@ -19,7 +19,7 @@ class Task:
 
     def work(self):
         start = time.perf_counter()
-        self.x = np.linalg.solve(self.a, self.b)
+        self.x = np.linalg.solve(self.A, self.b)
         self.time = time.perf_counter() - start
 
     def to_json(self) -> str:
@@ -28,7 +28,7 @@ class Task:
             {
                 "identifier": self.identifier,
                 "size": self.size,
-                "a": self.a.tolist(),
+                "A": self.A.tolist(),
                 "b": self.b.tolist(),
                 "time": self.time,
             }
@@ -40,7 +40,7 @@ class Task:
         # Deserialize a JSON string to a Task object.
         data = json.loads(text)
         task = Task(identifier=data["identifier"], size=data["size"])
-        task.a = np.array(data["a"])
+        task.A = np.array(data["A"])
         task.b = np.array(data["b"])
         task.time = data["time"]
         return task
@@ -51,6 +51,6 @@ class Task:
         return (
             self.identifier == other.identifier
             and self.size == other.size
-            and np.array_equal(self.a, other.a)
+            and np.array_equal(self.A, other.A)
             and np.array_equal(self.b, other.b)
         )

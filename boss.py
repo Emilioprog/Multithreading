@@ -9,8 +9,8 @@ class Boss:
     def __init__(self):
         self.client = QueueClient()
 
-    def assign_task(self, task_id):
-        task = Task(identifier=task_id)
+    def assign_task(self, task_id, size=None):
+        task = Task(identifier=task_id, size=size)
         print(f"Boss task : {task.identifier} sended to the queue.")
         self.client.task_queue.put(task)
 
@@ -33,6 +33,6 @@ if __name__ == "__main__":
 
     task_id = 0
     while True:
-        boss.assign_task(task_id)
+        boss.assign_task(task_id,10)
         task_id += 1
         time.sleep(2)

@@ -30,74 +30,70 @@ public:
 
   // Fonction pour initialiser le Minion en récupérant des données depuis un
   // serveur
-bool initialization() {
+  bool initialization() {
     cpr::Response response = cpr::Get(cpr::Url{"http://localhost:8000"});
 
     // Vérifiez si la réponse est vide
     if (response.text.empty()) {
-        std::cerr << "Réponse vide du serveur" << std::endl;
-        return false;
+      std::cerr << "Réponse vide du serveur" << std::endl;
+      return false;
     }
 
     // Vérifiez les erreurs réseau
     if (response.error) {
-        std::cerr << "Erreur réseau : " << response.error.message << std::endl;
-        return false;
+      std::cerr << "Erreur réseau : " << response.error.message << std::endl;
+      return false;
     }
 
     // Vérifiez le code HTTP
     if (response.status_code != CODE_SUCCESS) {
-        std::cerr << "Erreur HTTP : " << response.status_code << std::endl;
-        return false;
+      std::cerr << "Erreur HTTP : " << response.status_code << std::endl;
+      return false;
     }
 
     try {
-        nlohmann::json data_json = nlohmann::json::parse(response.text);
+      nlohmann::json data_json = nlohmann::json::parse(response.text);
 
-
-        if (!data_json.contains("A") || !data_json.contains("b") || 
-            !data_json.contains("identifier") || !data_json.contains("size") || !data_json.contains("time")) {
-            std::cerr << "Données JSON incomplètes" << std::endl;
-            return false;
-        }
-
-        identifier = data_json["identifier"];
-        size = data_json["size"];
-        time = data_json["time"];
-
-        
-
-        if (!data_json["A"].is_array() || !data_json["b"].is_array() ||
-            data_json["A"].size() != size || data_json["b"].size() != size) {
-            std::cerr << "Dimensions invalides dans le JSON" << std::endl;
-            return false;
-        }
-
-        A.resize(size, size);
-        b.resize(size);
-
-        for (unsigned long i = 0; i < size; i++) {
-            for (unsigned long j = 0; j < size; j++) {
-                A(i, j) = data_json["A"][i][j].is_number() 
-                          ? data_json["A"][i][j].get<double>() 
-                          : 0.0;
-            }
-            b(i) = data_json["b"][i].is_number() 
-                   ? data_json["b"][i].get<double>() 
-                   : 0.0;
-        }
-
-        std::cout << "Minion " << getpid() << " pour la tâche " << identifier
-                  << " initialisé" << std::endl;
-
-        return true;
-
-    } catch (const nlohmann::json::exception& e) {
-        std::cerr << "Erreur JSON : " << e.what() << std::endl;
+      if (!data_json.contains("A") || !data_json.contains("b") ||
+          !data_json.contains("identifier") || !data_json.contains("size") ||
+          !data_json.contains("time")) {
+        std::cerr << "Données JSON incomplètes" << std::endl;
         return false;
-    }
-}
+      }
 
+      identifier = data_json["identifier"];
+      size = data_json["size"];
+      time = data_json["time"];
+
+      if (!data_json["A"].is_array() || !data_json["b"].is_array() ||
+          data_json["A"].size() != size || data_json["b"].size() != size) {
+        std::cerr << "Dimensions invalides dans le JSON" << std::endl;
+        return false;
+      }
+
+      A.resize(size, size);
+      b.resize(size);
+
+      for (unsigned long i = 0; i < size; i++) {
+        for (unsigned long j = 0; j < size; j++) {
+          A(i, j) = data_json["A"][i][j].is_number()
+                        ? data_json["A"][i][j].get<double>()
+                        : 0.0;
+        }
+        b(i) = data_json["b"][i].is_number() ? data_json["b"][i].get<double>()
+                                             : 0.0;
+      }
+
+      std::cout << "Minion " << getpid() << " pour la tâche " << identifier
+                << " initialisé" << std::endl;
+
+      return true;
+
+    } catch (const nlohmann::json::exception &e) {
+      std::cerr << "Erreur JSON : " << e.what() << std::endl;
+      return false;
+    }
+  }
 
   // Fonction pour effectuer le travail du Minion en résolvant un système
   // linéaire AX=b
@@ -116,8 +112,7 @@ bool initialization() {
     std::cout << "Minion " << getpid() << " a terminé la tâche " << identifier
               << " en " << execution_time << " secondes" << std::endl;
 
-    //envoyer données sur serveur (POST)
-    
+    // envoyer données sur serveur (POST)
 
     // Retourner le temps d'exécution
     return execution_time;

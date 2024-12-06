@@ -9,7 +9,7 @@ class Task:
         self.identifier = identifier
         # choosee the size of the problem
         # self.size = size or np.random.randint(300, 3_000)
-        self.size = size or np.random(30,300)
+        self.size = size or np.random(30, 300)
         # Generate the input of the problem
         self.A = np.random.rand(self.size, self.size)
         self.b = np.random.rand(self.size)

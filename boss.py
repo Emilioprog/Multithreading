@@ -33,6 +33,6 @@ if __name__ == "__main__":
 
     task_id = 0
     while True:
-        boss.assign_task(task_id,10)
+        boss.assign_task(task_id, 10)
         task_id += 1
         time.sleep(2)
